@@ -46,6 +46,10 @@ export class UsersService {
       where: {
         id,
       },
+      omit: {
+        refreshToken: true,
+        password: true,
+      },
     });
   }
   findOneByUserName(value: string) {

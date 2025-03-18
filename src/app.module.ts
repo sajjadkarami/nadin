@@ -5,10 +5,12 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-store';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
     UsersModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     AuthModule,
     CacheModule.register({
       isGlobal: true,

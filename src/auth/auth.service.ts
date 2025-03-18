@@ -1,9 +1,14 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { SignUpWithUserNameDto } from './dto/signUp-userName.dto';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { Token } from './model/token.model';
 import { HashService } from '../utils/hash.service';
+import { UserDto } from '../users/dto/user.dto';
 
 @Injectable()
 export class AuthService {
@@ -32,6 +37,14 @@ export class AuthService {
       return this.generateTokens({ userId: user.id });
     }
     throw new UnauthorizedException('username or password is invalid');
+  }
+
+  async validateUser(id): Promise<UserDto> {
+    const user = await this.userService.findOneById(id);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    return user;
   }
   private generateTokens(payload: { userId: number }): Token {
     return {
