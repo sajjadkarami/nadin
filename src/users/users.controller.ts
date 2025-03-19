@@ -51,7 +51,7 @@ export class UsersController {
   }
 
   @Get('me')
-  async me(@UserEntity() { userId }) {
+  async me(@UserEntity() { userId }: JwtDto) {
     const user = await this.usersService.findOneById(userId);
     if (!user) {
       throw new BadRequestException('UserNotFound');

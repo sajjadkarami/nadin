@@ -23,7 +23,7 @@ export class AuthService {
   async login(id: number) {
     const user = await this.userService.findOneById(id);
     if (!user) throw new BadRequestException('User not found');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     return this.generateTokens({ userId: id, role: user.role });
   }
 
