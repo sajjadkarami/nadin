@@ -9,6 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  Query,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/createTask.dto';
@@ -19,10 +20,17 @@ import { JwtAuthGuard } from '../auth/guards/jwtAuthGuard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserEntity } from '../auth/decorator/userEntity';
 import { JwtDto } from '../auth/dto/Jwt.dto';
-import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { getFileFormat } from '../utils/files.util';
+import { TaskFindFilter } from './dto/taskFindFilters.dto';
 
 @ApiBearerAuth()
 @Controller('tasks')
@@ -48,7 +56,6 @@ export class TasksController {
         destination: './files/tasks/',
         filename(req, file, callback) {
           const user = req.user as JwtDto;
-
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           const taskName = req.body.name as string;
           if (!file) {
@@ -76,14 +83,23 @@ export class TasksController {
     );
   }
 
+  @Roles(Role.USER)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Get()
-  findAll() {
-    return this.tasksService.findAll();
+  findAll(@Query() filters: TaskFindFilter, @UserEntity() { userId }: JwtDto) {
+    return this.tasksService.findAll({ ...filters, userId });
   }
 
+  @ApiParam({
+    name: 'id',
+    required: true,
+    type: Number,
+  })
+  @Roles(Role.USER)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.tasksService.findOne(+id);
+  findOne(@Param('id') id: string, @UserEntity() { userId }: JwtDto) {
+    return this.tasksService.findOne(+id, userId);
   }
 
   @Patch(':id')
@@ -91,8 +107,15 @@ export class TasksController {
     return this.tasksService.update(+id, updateTaskDto);
   }
 
+  @ApiParam({
+    name: 'id',
+    required: true,
+    type: Number,
+  })
+  @Roles(Role.USER)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.tasksService.remove(+id);
+  remove(@Param('id') id: string, @UserEntity() { userId }: JwtDto) {
+    return this.tasksService.remove(+id, userId);
   }
 }
