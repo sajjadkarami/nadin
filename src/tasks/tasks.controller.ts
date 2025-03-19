@@ -1,36 +1,30 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
-  UploadedFile,
-  Query,
 } from '@nestjs/common';
-import { TasksService } from './tasks.service';
-import { CreateTaskDto } from './dto/createTask.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiParam } from '@nestjs/swagger';
+import { diskStorage } from 'multer';
 import { Roles } from '../auth/decorator/roles.decorator';
+import { UserEntity } from '../auth/decorator/userEntity';
+import { JwtDto } from '../auth/dto/Jwt.dto';
 import { Role } from '../auth/dto/role.enum';
 import { JwtAuthGuard } from '../auth/guards/jwtAuthGuard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { UserEntity } from '../auth/decorator/userEntity';
-import { JwtDto } from '../auth/dto/Jwt.dto';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
 import { getFileFormat } from '../utils/files.util';
+import { CreateTaskDto } from './dto/createTask.dto';
 import { TaskFindFilter } from './dto/taskFindFilters.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
+import { TasksService } from './tasks.service';
 
 @ApiBearerAuth()
 @Controller('tasks')
@@ -102,9 +96,25 @@ export class TasksController {
     return this.tasksService.findOne(+id, userId);
   }
 
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    type: UpdateTaskDto,
+  })
+  @UseInterceptors(FileInterceptor('attachment'))
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
-    return this.tasksService.update(+id, updateTaskDto);
+  @Roles(Role.USER)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async update(
+    @Param('id') id: string,
+    @UserEntity() { userId }: JwtDto,
+    @Body() updateTaskDto: UpdateTaskDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    let attachment: string | undefined;
+    if (file) {
+      attachment = file.filename;
+    }
+    return this.tasksService.update(+id, userId, updateTaskDto, attachment);
   }
 
   @ApiParam({

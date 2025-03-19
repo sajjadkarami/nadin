@@ -6,6 +6,7 @@ import { TaskList } from './dto/taskList.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskOrderBy } from './dto/taskOrderBy.enum';
 import { Order } from '../common/dto/order.enum';
+import { Role } from '../auth/dto/role.enum';
 
 @Injectable()
 export class TasksService {
@@ -97,6 +98,7 @@ export class TasksService {
             id: true,
             userName: true,
             email: true,
+            role: true,
           },
         },
       },
@@ -106,15 +108,53 @@ export class TasksService {
       throw new BadRequestException('Task not found');
     }
 
-    if (task.userId !== userId) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (!user || (task.userId !== userId && user.role !== Role.ADMIN)) {
       throw new BadRequestException('You can only view your own tasks');
     }
 
     return task;
   }
 
-  update(id: number, updateTaskDto: UpdateTaskDto) {
-    return `This action updates a #${id} task`;
+  async update(
+    id: number,
+    userId: number,
+    updateTaskDto: UpdateTaskDto,
+    attachment?: string,
+  ) {
+    const task = await this.prisma.task.findUnique({
+      where: { id },
+    });
+
+    if (!task) {
+      throw new BadRequestException('Task not found');
+    }
+
+    if (task.userId !== userId) {
+      throw new BadRequestException('You can only update your own tasks');
+    }
+
+    return this.prisma.task.update({
+      where: { id },
+      data: {
+        ...updateTaskDto,
+        attachment: attachment,
+      },
+      include: {
+        User: {
+          select: {
+            id: true,
+            userName: true,
+            phoneNumber: true,
+            email: true,
+          },
+        },
+      },
+    });
   }
 
   async remove(id: number, userId: number) {
@@ -126,7 +166,12 @@ export class TasksService {
       throw new BadRequestException('Task not found');
     }
 
-    if (task.userId !== userId) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (!user || (task.userId !== userId && user.role !== Role.ADMIN)) {
       throw new BadRequestException('You can only delete your own tasks');
     }
 

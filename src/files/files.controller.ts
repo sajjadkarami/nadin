@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Controller,
   Get,
+  Param,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -25,13 +26,37 @@ export class FilesController {
   @Roles(Role.USER)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get('avatar')
-  async getAvatar(@UserEntity() user: JwtDto, @Res() res: Response) {
-    const avatar = await this.filesService.getAvatar(1);
+  async getAvatar(@UserEntity() { userId }: JwtDto, @Res() res: Response) {
+    const avatar = await this.filesService.getAvatar(userId);
+    if (!avatar) {
+      throw new BadRequestException('avatar not exists');
+    }
     const path = join(join(process.cwd()), `files/avatars/${avatar}`);
     const exists = existsSync(path);
     if (!exists) {
       throw new BadRequestException('avatar not exists');
     }
     res.download(path);
+  }
+
+  @Roles(Role.USER)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Get('attachment/:taskId')
+  async getAttachment(
+    @UserEntity() { userId }: JwtDto,
+    @Param('taskId') taskId: number,
+    @Res() res: Response,
+  ) {
+    const attachment = await this.filesService.getAttachment(userId, taskId);
+    if (!attachment) {
+      throw new BadRequestException('attachment not exists');
+    }
+    const path = join(join(process.cwd()), `files/tasks/${attachment}`);
+    const exists = existsSync(path);
+    if (!exists) {
+      throw new BadRequestException('attachment not exists');
+    }
+    res.download(path);
+    return attachment;
   }
 }
