@@ -1,7 +1,7 @@
 import { IsString } from 'class-validator';
 import { PasswordDto } from './password.dto';
 
-export class SignUpWithUserNameDto extends PasswordDto {
+export class LoginDto extends PasswordDto {
   @IsString()
   userName: string;
 }

@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 
 export class UserDto {
@@ -5,6 +6,7 @@ export class UserDto {
   userName: string | null;
   email: string | null;
   phoneNumber: string | null;
+  @ApiProperty({ enumName: 'role', enum: Role })
   role: Role;
   isEmailVerified: boolean;
   createdAt: Date;

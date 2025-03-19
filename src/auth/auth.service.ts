@@ -1,14 +1,11 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { SignUpWithUserNameDto } from './dto/signUp-userName.dto';
-import { UsersService } from '../users/users.service';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Token } from './model/token.model';
-import { HashService } from '../utils/hash.service';
 import { UserDto } from '../users/dto/user.dto';
+import { UsersService } from '../users/users.service';
+import { HashService } from '../utils/hash.service';
+import { SignUpDto } from './dto/signUp.dto';
+import { Token } from './model/token.model';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -17,36 +14,35 @@ export class AuthService {
     private jwtService: JwtService,
     private hashService: HashService,
   ) {}
-  async signUpWithUserName({
-    userName,
-    password,
-  }: SignUpWithUserNameDto): Promise<Token> {
+
+  async signUp({ userName, password }: SignUpDto): Promise<Token> {
     const user = await this.userService.create({ userName, password });
-    return this.generateTokens({ userId: user.id });
-  }
-  async loginWithUserName({ userName, password }: SignUpWithUserNameDto) {
-    const user = await this.userService.findOneByUserName(userName);
-    if (user) {
-      const isPasswordCorrect = await this.hashService.compare(
-        password,
-        user.password,
-      );
-      if (!isPasswordCorrect) {
-        throw new UnauthorizedException('username or password is invalid');
-      }
-      return this.generateTokens({ userId: user.id });
-    }
-    throw new UnauthorizedException('username or password is invalid');
+    return this.login(user.id);
   }
 
-  async validateUser(id): Promise<UserDto> {
+  async login(id: number) {
     const user = await this.userService.findOneById(id);
+    if (!user) throw new BadRequestException('User not found');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    return this.generateTokens({ userId: id, role: user.role });
+  }
+
+  async validateUser(userName: string, password: string): Promise<UserDto> {
+    const user = await this.userService.findOneByUserName(userName);
+
     if (!user) {
       throw new BadRequestException('User not found');
     }
+    const isMatch: boolean = await this.hashService.compare(
+      password,
+      user.password,
+    );
+    if (!isMatch) {
+      throw new BadRequestException('Password does not match');
+    }
     return user;
   }
-  private generateTokens(payload: { userId: number }): Token {
+  private generateTokens(payload: { userId: number; role: Role }): Token {
     return {
       accessToken: this.generateAccessToken(payload),
       refreshToken: this.generateRefreshToken(payload),
@@ -54,10 +50,7 @@ export class AuthService {
   }
 
   private generateRefreshToken(payload: { userId: number }): string {
-    return this.jwtService.sign(payload, {
-      secret: process.env.REFRESH_TOKEN_SECRET,
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRATION,
-    });
+    return this.jwtService.sign(payload);
   }
 
   private generateAccessToken(payload: { userId: number }): string {
