@@ -10,12 +10,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly authService: AuthService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.ACCESS_TOKEN_SECRET || '',
+      ignoreExpiration: false,
+      secretOrKey: process.env.ACCESS_TOKEN_SECRET || 'ACCESS_TOKEN_SECRET',
     });
   }
 
-  async validate(payload: JwtDto) {
-    const user = await this.authService.validateUser(payload.userId);
-    return user;
+  validate(payload) {
+    return payload;
   }
 }

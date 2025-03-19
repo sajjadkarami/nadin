@@ -1,5 +1,9 @@
+import { Role } from './role.enum';
+
 export interface JwtDto {
-  userId: string;
+  userId: number;
+
+  role: Role;
   /**
    * Issued at
    */
