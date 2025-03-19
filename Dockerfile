@@ -11,6 +11,7 @@ RUN npm install
 COPY . .
 
 RUN npm run build
+RUN npx prisma generate
 
 # Production stage
 FROM node:18-alpine
@@ -23,8 +24,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
 # Create uploads directory
-RUN mkdir -p uploads
+RUN mkdir -p files
 
-EXPOSE 3000
+EXPOSE ${APP_PORT:-3000}
 
-CMD ["npm", "run", "start:prod"] 
+# Run prisma migrations and start the app
+CMD npx prisma migrate deploy && npm run start:prod 
