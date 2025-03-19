@@ -43,11 +43,13 @@ model Task {
   id          Int      @id @default(autoincrement())
   name        String
   description String
-  attachment  String
+  attachment  String?
   User        User?    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId      Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@unique([userId, name])
 }
 
 enum Role {

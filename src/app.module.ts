@@ -8,6 +8,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwtAuthGuard';
 import { JwtStrategy } from './auth/strategy/jwt.strategy';
 import { FilesModule } from './files/files.module';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { FilesModule } from './files/files.module';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     AuthModule,
     FilesModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [
