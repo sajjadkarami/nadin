@@ -24,8 +24,15 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Nadin Api project
 
+## Run with Docker
+```
+$ docker compose up --build
+# seed the database with mock file
+$ docker exec -it nadin_api npm run seed
+```
+  run Swagger api on http://localhost:3001/api
 ## Project setup
 
 ```bash
@@ -40,7 +47,10 @@ $ npm run start
 
 # watch mode
 $ npm run start:dev
-
+$ npx prisma generate
+$ npm run prisma migrate deploy
+# seed the database
+$ npm run seed
 # production mode
 $ npm run start:prod
 ```
