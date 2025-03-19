@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-
 import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/signUp.dto';
 import { Public } from '../common/decorator/public.decorator';
+import { JwtDto } from './dto/Jwt.dto';
 
 @ApiBearerAuth('Auth')
 @Controller('auth')
@@ -36,7 +35,7 @@ export class AuthController {
   })
   @UseGuards(AuthGuard('local'))
   @Post('login')
-  login(@Request() req) {
-    return this.authService.login(req.user.id);
+  login(@Request() req: { user: JwtDto }) {
+    return this.authService.login(req.user.userId);
   }
 }
