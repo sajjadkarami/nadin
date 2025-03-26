@@ -26,6 +26,10 @@
 
 Nadin Api project
 
+default admin username is :
+username: admin
+password: Password1234
+
 ## Run with Docker
 ```
 $ docker compose up --build
@@ -48,7 +52,7 @@ $ npm run start
 # watch mode
 $ npm run start:dev
 $ npx prisma generate
-$ npm run prisma migrate deploy
+$ npx prisma migrate deploy
 # seed the database
 $ npm run seed
 # production mode
